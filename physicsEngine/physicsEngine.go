@@ -29,6 +29,14 @@ func (ps *PhysicalState) UpdatePhysicalState(force Vector2D) {
 	ps.Position.Add(ps.Velocity)
 }
 
+func (ps *PhysicalState) GetPhysicalState() PhysicalState {
+	return PhysicalState{
+		Position: ps.Position,
+		Velocity: ps.Velocity,
+		Mass:     ps.Mass,
+	}
+}
+
 type IPhysicsObject interface {
 	UpdatePhysicalState(Vector2D)
 	GetPhysicalState() PhysicalState

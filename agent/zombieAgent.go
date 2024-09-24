@@ -1,4 +1,4 @@
-package agents
+package extendedAgents
 
 import (
 	"zombieApocalypeSOMAS/physicsEngine"
@@ -15,3 +15,11 @@ type Zombie struct {
 	*agent.BaseAgent[IZombie]
 	*physicsEngine.PhysicalState
 }
+
+func SpawnNewZombie(serv agent.IExposedServerFunctions[IZombie]) *Zombie {
+	return &Zombie{
+		BaseAgent: agent.CreateBaseAgent(serv),
+	}
+}
+
+
