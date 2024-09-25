@@ -1,6 +1,8 @@
 package physicsEngine
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Vector2D struct {
 	X float32

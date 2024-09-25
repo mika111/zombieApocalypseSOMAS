@@ -7,14 +7,22 @@ import (
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
 )
 
+type Species int
+
+const (
+	HomoSapien = iota
+	ZomboSapien
+)
+
 type IApocalypseEntity interface {
 	agent.IAgent[IApocalypseEntity]
 	physicsEngine.IPhysicsObject
+	SpeciesSpecificInfo
 	PrintPhysicalState()
 }
 
 type SpeciesSpecificInfo interface {
-	GetSpecies() string
+	GetSpecies() Species
 }
 
 type IZombie interface {
@@ -63,17 +71,21 @@ func SpawnNewZombie(mass float32, initialPosition physicsEngine.Vector2D, serv a
 
 func (entity *ApocalypseEntity) PrintPhysicalState() {
 	state := entity.PhysicalState
-	fmt.Printf("%v %v. Position = ", entity.GetSpecies(), entity.GetID())
+	if entity.GetSpecies() == HomoSapien {
+		fmt.Printf("Human %v. Position = ", entity.GetID())
+	} else {
+		fmt.Printf("Zombie %v. Position = ", entity.GetID())
+	}
 	state.Position.Print()
 	fmt.Printf(". Velocity = ")
 	state.Velocity.Print()
 	fmt.Printf(". Mass = %v\n", state.Mass)
 }
 
-func (human *Human) GetSpecies() string {
-	return "human"
+func (human *Human) GetSpecies() Species {
+	return HomoSapien
 }
 
-func (zombie *Zombie) GetSpecies() string {
-	return "zombie"
+func (zombie *Zombie) GetSpecies() Species {
+	return ZomboSapien
 }
