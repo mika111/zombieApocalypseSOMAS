@@ -16,7 +16,7 @@ type ApocalypseServer struct {
 	*server.BaseServer[extendedAgents.IApocalypseEntity]
 }
 
-func CreateApocalypseServer(numZombies,numHumans, iterations, turns int, maxDuration time.Duration, maxThreads int) *ApocalypseServer {
+func CreateApocalypseServer(numZombies, numHumans, iterations, turns int, maxDuration time.Duration, maxThreads int) *ApocalypseServer {
 	server := &ApocalypseServer{
 		BaseServer: server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
 	}
