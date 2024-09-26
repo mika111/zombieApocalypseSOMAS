@@ -7,7 +7,6 @@ import (
 
 	//"github.com/kyroy/kdtree"
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/server"
-	"github.com/google/uuid"
 )
 
 type IApocalypseServer interface {
@@ -18,13 +17,11 @@ type IApocalypseServer interface {
 
 type ApocalypseServer struct {
 	*server.BaseServer[extendedAgents.IApocalypseEntity]
-	zombies map[uuid.UUID]extendedAgents.IZombie
 }
 
 func CreateApocalypseServer(numberZombies, numberHumans, iterations, turns int, maxDuration time.Duration, maxThreads int) *ApocalypseServer {
 	server := &ApocalypseServer{
 		BaseServer: server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
-		zombies:    make(map[uuid.UUID]extendedAgents.IZombie),
 	}
 	for i := 0; i < numberZombies; i++ {
 		zombie := extendedAgents.SpawnNewZombie(10.0, physicsEngine.Vector2D{X: 0, Y: 0}, server)
@@ -46,7 +43,6 @@ func (server *ApocalypseServer) GetNumEntity(entity extendedAgents.Species) int 
 	}
 	return ans
 }
-
 
 func (server *ApocalypseServer) GetEntityLocations(entity extendedAgents.Species) []physicsEngine.Vector2D {
 	entityLocations := make([]physicsEngine.Vector2D, 0)

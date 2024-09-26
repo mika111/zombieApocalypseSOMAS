@@ -7,19 +7,19 @@ import (
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
 )
 
-type IApocalypseEntity interface {
-	agent.IAgent[IApocalypseEntity]
-	physicsEngine.IPhysicsObject
-	GetSpecies() Species
-	PrintPhysicalState()
-}
-
 type Species int
 
 const (
 	HomoSapien = iota
 	ZomboSapien
 )
+
+type IApocalypseEntity interface {
+	agent.IAgent[IApocalypseEntity]
+	physicsEngine.IPhysicsObject
+	GetSpecies() Species
+	PrintPhysicalState()
+}
 
 type IZombie interface {
 	IApocalypseEntity
