@@ -45,6 +45,10 @@ func (ps *PhysicalState) GetPhysicalState() PhysicalState {
 	}
 }
 
+func (ps *PhysicalState) PrintPhysicalState() {
+	fmt.Printf("Position: %f. Velocity: %f. Mass: %f\n", ps.Position, ps.Velocity, ps.Mass)
+}
+
 type IPhysicsObject interface {
 	UpdatePhysicalState(Vector2D)
 	GetPhysicalState() PhysicalState

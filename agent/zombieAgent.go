@@ -7,22 +7,11 @@ import (
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
 )
 
-type Species int
-
-const (
-	HomoSapien = iota
-	ZomboSapien
-)
-
 type IApocalypseEntity interface {
 	agent.IAgent[IApocalypseEntity]
 	physicsEngine.IPhysicsObject
-	SpeciesSpecificInfo
+	GetSpecies() string
 	PrintPhysicalState()
-}
-
-type SpeciesSpecificInfo interface {
-	GetSpecies() Species
 }
 
 type IZombie interface {
@@ -36,7 +25,6 @@ type IHuman interface {
 type ApocalypseEntity struct {
 	*agent.BaseAgent[IApocalypseEntity]
 	*physicsEngine.PhysicalState
-	SpeciesSpecificInfo
 }
 
 type Zombie struct {
@@ -54,7 +42,6 @@ func SpawnNewHuman(mass float32, initialPosition physicsEngine.Vector2D, serv ag
 	}
 
 	human := &Human{ApocalypseEntity: entity}
-	entity.SpeciesSpecificInfo = human
 	return human
 }
 
@@ -65,27 +52,23 @@ func SpawnNewZombie(mass float32, initialPosition physicsEngine.Vector2D, serv a
 	}
 
 	zombie := &Zombie{ApocalypseEntity: entity}
-	entity.SpeciesSpecificInfo = zombie
 	return zombie
 }
 
-func (entity *ApocalypseEntity) PrintPhysicalState() {
-	state := entity.PhysicalState
-	if entity.GetSpecies() == HomoSapien {
-		fmt.Printf("Human %v. Position = ", entity.GetID())
-	} else {
-		fmt.Printf("Zombie %v. Position = ", entity.GetID())
-	}
-	state.Position.Print()
-	fmt.Printf(". Velocity = ")
-	state.Velocity.Print()
-	fmt.Printf(". Mass = %v\n", state.Mass)
+func (h *Human) PrintPhysicalState() {
+	fmt.Printf("Human %v. Position = ", h.GetID())
+	h.PhysicalState.PrintPhysicalState()
 }
 
-func (human *Human) GetSpecies() Species {
-	return HomoSapien
+func (z *Zombie) PrintPhysicalState() {
+	fmt.Printf("Zombie %v. Position = ", z.GetID())
+	z.PhysicalState.PrintPhysicalState()
 }
 
-func (zombie *Zombie) GetSpecies() Species {
-	return ZomboSapien
+func (h *Human) GetSpecies() string {
+	return "human"
+}
+
+func (z *Zombie) GetSpecies() string {
+	return "zombie"
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"time"
-	extendedAgents "zombieApocalypeSOMAS/agent"
 	apocalypseServer "zombieApocalypeSOMAS/environments"
 	"zombieApocalypeSOMAS/physicsEngine"
 )
@@ -18,7 +17,7 @@ func main() {
 		fmt.Println("New physical state")
 		ag.PrintPhysicalState()
 	}
-	zombLocations := ApocalypseServer.GetEntityLocations(extendedAgents.ZomboSapien)
-	humanLocations := ApocalypseServer.GetEntityLocations(extendedAgents.HomoSapien)
+	zombLocations := ApocalypseServer.GetZombieLocations()
+	humanLocations := ApocalypseServer.GetHumanLocations()
 	fmt.Printf("Human Locations: %v. Zombie Locations: %v\n", humanLocations, zombLocations)
 }
