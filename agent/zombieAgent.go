@@ -10,9 +10,16 @@ import (
 type IApocalypseEntity interface {
 	agent.IAgent[IApocalypseEntity]
 	physicsEngine.IPhysicsObject
-	GetSpecies() string
+	GetSpecies() Species
 	PrintPhysicalState()
 }
+
+type Species int
+
+const (
+	HomoSapien = iota
+	ZomboSapien
+)
 
 type IZombie interface {
 	IApocalypseEntity
@@ -65,10 +72,10 @@ func (z *Zombie) PrintPhysicalState() {
 	z.PhysicalState.PrintPhysicalState()
 }
 
-func (h *Human) GetSpecies() string {
-	return "human"
+func (h *Human) GetSpecies() Species {
+	return HomoSapien
 }
 
-func (z *Zombie) GetSpecies() string {
-	return "zombie"
+func (z *Zombie) GetSpecies() Species {
+	return ZomboSapien
 }
