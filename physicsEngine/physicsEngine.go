@@ -56,6 +56,7 @@ func (ps *PhysicalState) PrintPhysicalState() {
 type IPhysicsObject interface {
 	UpdatePhysicalState(Vector2D)
 	GetPhysicalState() PhysicalState
+	PrintPhysicalState()
 }
 
 func CreateInitialPhysicalState(initialPosition *Vector2D, mass float32) *PhysicalState {

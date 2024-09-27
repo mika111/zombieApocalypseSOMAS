@@ -17,7 +17,6 @@ type IApocalypseEntity interface {
 	agent.IAgent[IApocalypseEntity]
 	physicsEngine.IPhysicsObject
 	GetSpecies() Species
-	PrintPhysicalState()
 }
 
 type ApocalypseEntity struct {
