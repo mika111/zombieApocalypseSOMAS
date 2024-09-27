@@ -5,7 +5,7 @@ import (
 	extendedAgents "zombieApocalypeSOMAS/agent"
 	"zombieApocalypeSOMAS/physicsEngine"
 
-	//"github.com/kyroy/kdtree"
+	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/server"
 )
 
@@ -17,49 +17,61 @@ type IApocalypseServer interface {
 
 type ApocalypseServer struct {
 	*server.BaseServer[extendedAgents.IApocalypseEntity]
-	//numOf<entity> used to preallocate space for return array for Get<entity>Locations
-	numZombies int
-	numHumans  int
 }
 
-func CreateApocalypseServer(numberZombies, numberHumans, iterations, turns int, maxDuration time.Duration, maxThreads int) *ApocalypseServer {
+func CreateApocalypseServer(numZombies, numHumans, iterations, turns int, maxDuration time.Duration, maxThreads int) *ApocalypseServer {
 	server := &ApocalypseServer{
 		BaseServer: server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
-		numZombies: 0,
-		numHumans:  0,
 	}
-	for i := 0; i < numberZombies; i++ {
-		server.AddAgent(extendedAgents.SpawnNewZombie(10.0, physicsEngine.Vector2D{X: 0, Y: 0}, server))
-		server.numZombies++
+	for i := 0; i < numZombies; i++ {
+		zombie := server.SpawnNewZombie(10.0, physicsEngine.ZeroVector())
+		server.AddAgent(zombie)
 	}
-	for i := 0; i < numberHumans; i++ {
-		server.AddAgent(extendedAgents.SpawnNewHuman(10.0, physicsEngine.Vector2D{X: 0, Y: 0}, server))
-		server.numHumans++
+	for i := 0; i < numHumans; i++ {
+		human := server.SpawnNewHuman(10.0, physicsEngine.ZeroVector())
+		server.AddAgent(human)
 	}
 	return server
 }
 
-func (server *ApocalypseServer) GetNumHumans() int {
-	return server.numHumans
-}
-
-func (server *ApocalypseServer) GetNumZombies() int {
-	return server.numZombies
-}
-
-func (server *ApocalypseServer) GetEntityLocations(speciesType extendedAgents.Species) []physicsEngine.Vector2D {
-	var numEntities int
-	if speciesType == extendedAgents.HomoSapien {
-		numEntities = server.numHumans
-	} else {
-		numEntities = server.numZombies
+func (serv *ApocalypseServer) SpawnNewHuman(mass float32, initialPosition physicsEngine.Vector2D) *extendedAgents.Human {
+	entity := &extendedAgents.ApocalypseEntity{
+		BaseAgent:     agent.CreateBaseAgent(serv),
+		PhysicalState: physicsEngine.CreateInitialPhysicalState(&initialPosition, mass),
 	}
-	entityLocations := make([]physicsEngine.Vector2D, numEntities)
-	i := 0
+
+	human := &extendedAgents.Human{ApocalypseEntity: entity}
+	return human
+}
+
+func (serv *ApocalypseServer) SpawnNewZombie(mass float32, initialPosition physicsEngine.Vector2D) *extendedAgents.Zombie {
+	entity := &extendedAgents.ApocalypseEntity{
+		BaseAgent:     agent.CreateBaseAgent(serv),
+		PhysicalState: physicsEngine.CreateInitialPhysicalState(&initialPosition, mass),
+	}
+
+	zombie := &extendedAgents.Zombie{
+		ApocalypseEntity: entity,
+		Strength:         10,
+	}
+	return zombie
+}
+
+func (server *ApocalypseServer) GetNumEntity(entity extendedAgents.Species) int {
+	ans := 0
 	for _, ag := range server.GetAgentMap() {
-		if ag.GetSpecies() == speciesType {
-			entityLocations[i] = *ag.GetPhysicalState().Position
-			i++
+		if ag.GetSpecies() == entity {
+			ans += 1
+		}
+	}
+	return ans
+}
+
+func (server *ApocalypseServer) GetEntityLocations(entity extendedAgents.Species) []physicsEngine.Vector2D {
+	entityLocations := make([]physicsEngine.Vector2D, 0)
+	for _, ag := range server.GetAgentMap() {
+		if ag.GetSpecies() == entity {
+			entityLocations = append(entityLocations, *ag.GetPhysicalState().Position)
 		}
 	}
 	return entityLocations

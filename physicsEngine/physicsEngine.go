@@ -9,6 +9,10 @@ type Vector2D struct {
 	Y float32
 }
 
+func ZeroVector() Vector2D {
+	return Vector2D{X: 0, Y: 0}
+}
+
 func (v2d *Vector2D) Add(vec Vector2D) {
 	v2d.X += vec.X
 	v2d.Y += vec.Y
@@ -45,9 +49,14 @@ func (ps *PhysicalState) GetPhysicalState() PhysicalState {
 	}
 }
 
+func (ps *PhysicalState) PrintPhysicalState() {
+	fmt.Printf("Position: %f. Velocity: %f. Mass: %f\n", ps.Position, ps.Velocity, ps.Mass)
+}
+
 type IPhysicsObject interface {
 	UpdatePhysicalState(Vector2D)
 	GetPhysicalState() PhysicalState
+	PrintPhysicalState()
 }
 
 func CreateInitialPhysicalState(initialPosition *Vector2D, mass float32) *PhysicalState {
