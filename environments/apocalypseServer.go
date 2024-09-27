@@ -1,7 +1,6 @@
 package apocalypseServer
 
 import (
-	"math/rand/v2"
 	"time"
 	extendedAgents "zombieApocalypeSOMAS/agent"
 	"zombieApocalypeSOMAS/physicsEngine"
@@ -18,19 +17,18 @@ type IApocalypseServer interface {
 
 type ApocalypseServer struct {
 	*server.BaseServer[extendedAgents.IApocalypseEntity]
-	randNumGenerator *rand.Rand
 }
 
-func CreateApocalypseServer(numberZombies, numberHumans, iterations, turns int, maxDuration time.Duration, maxThreads int) *ApocalypseServer {
+func CreateApocalypseServer(numZombies, numHumans, iterations, turns int, maxDuration time.Duration, maxThreads int) *ApocalypseServer {
 	server := &ApocalypseServer{
 		BaseServer: server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
 	}
-	for i := 0; i < numberZombies; i++ {
-		zombie := server.SpawnNewZombie(10.0, physicsEngine.Vector2D{X: 0, Y: 0})
+	for i := 0; i < numZombies; i++ {
+		zombie := server.SpawnNewZombie(10.0, physicsEngine.ZeroVector())
 		server.AddAgent(zombie)
 	}
-	for i := 0; i < numberHumans; i++ {
-		human := server.SpawnNewHuman(10.0, physicsEngine.Vector2D{X: 0, Y: 0})
+	for i := 0; i < numHumans; i++ {
+		human := server.SpawnNewHuman(10.0, physicsEngine.ZeroVector())
 		server.AddAgent(human)
 	}
 	return server
@@ -54,7 +52,6 @@ func (serv *ApocalypseServer) SpawnNewZombie(mass float32, initialPosition physi
 
 	zombie := &extendedAgents.Zombie{
 		ApocalypseEntity: entity,
-		RandNumGenerator: serv.randNumGenerator,
 		Strength:         10,
 	}
 	return zombie
