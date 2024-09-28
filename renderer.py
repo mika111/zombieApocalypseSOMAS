@@ -29,7 +29,7 @@ def initialiseDisplay(stateData):
 def createWall(wall):
     height = scaleY*(wall["TopLeftCorner"]["Y"] - wall["BottomRightCorner"]["Y"])
     width = scaleX*(wall["BottomRightCorner"]["X"] - wall["TopLeftCorner"]["X"])
-    return pygame.Rect(scaleX*wall["TopLeftCorner"]["X"]+borderSize,scaleY*wall["TopLeftCorner"]["Y"]+borderSize,width,height)
+    return pygame.Rect(scaleX*wall["TopLeftCorner"]["X"]+borderSize,scaleY*wall["BottomRightCorner"]["Y"]+borderSize,width,height)
 
 def createExit(exit):
     pointA = (exit["PointA"]["X"]+ borderSize,exit["PointA"]["Y"]+borderSize)
