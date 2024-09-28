@@ -29,6 +29,11 @@ func (v2d *Vector2D) Print() {
 	fmt.Printf("[%v,%v]", v2d.X, v2d.Y)
 }
 
+func MakeVec2D(X, Y float32) Vector2D {
+	return Vector2D{X: X,
+		Y: Y}
+}
+
 type PhysicalState struct {
 	Position *Vector2D
 	Velocity *Vector2D
