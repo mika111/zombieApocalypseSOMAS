@@ -143,5 +143,4 @@ func (server *ApocalypseServer) GenerateRandomPosition() physicsEngine.Vector2D 
 	vec2.Y = server.mapSize.Y * (float32(rand.NormFloat64()) + 1) / 2
 	vec2.X = server.mapSize.X * (float32(rand.NormFloat64()) + 1) / 2
 	return vec2
-
 }

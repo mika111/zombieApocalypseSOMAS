@@ -6,8 +6,12 @@ import (
 	"zombieApocalypeSOMAS/physicsEngine"
 )
 
+func CreateEnvironment(server *apocalypseServer.ApocalypseServer) {
+	server.AddWall(physicsEngine.MakeVec2D(10.2, 40.2), physicsEngine.MakeVec2D(15.2, 10.2))
+}
+
 func main() {
-	ApocalypseServer := apocalypseServer.CreateApocalypseServer(10, 10, 1, 1, time.Millisecond, 100, 100, 100)
+	ApocalypseServer := apocalypseServer.CreateApocalypseServer(100, 100, 1, 1, time.Millisecond, 100, 700, 500)
 	//fmt.Printf("Number of Zombies: %v. Number of Humans: %v\n", ApocalypseServer.GetNumEntity(extendedAgents.ZomboSapien), ApocalypseServer.GetNumEntity(extendedAgents.HomoSapien))
 	ApocalypseServer.AddWall(physicsEngine.MakeVec2D(10.2, 40.2), physicsEngine.MakeVec2D(15.2, 10.2))
 	ApocalypseServer.AddExit(physicsEngine.MakeVec2D(0, 0), physicsEngine.MakeVec2D(0, 10))
