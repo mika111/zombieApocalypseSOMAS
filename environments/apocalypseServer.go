@@ -108,9 +108,9 @@ func (server *ApocalypseServer) GetEntityLocations(entity extendedAgents.Species
 	return entityLocations
 }
 
-func (server *ApocalypseServer) AddWall(point1, point2 physicsEngine.Vector2D) {
-	wall := Wall{TopLeftCorner: point1,
-		BottomRightCorner: point2}
+func (server *ApocalypseServer) AddWall(topLeft, bottomRight physicsEngine.Vector2D) {
+	wall := Wall{TopLeftCorner: topLeft,
+		BottomRightCorner: bottomRight}
 	server.Walls = append(server.Walls, wall)
 }
 
