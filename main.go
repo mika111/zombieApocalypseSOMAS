@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	ApocalypseServer := apocalypseServer.CreateApocalypseServer(100, 100, 1, 1, time.Millisecond, 100, 700, 700)
+	ApocalypseServer := apocalypseServer.CreateApocalypseServer(0, 0, 1, 1, time.Millisecond, 100, 700, 700)
 	//fmt.Printf("Number of Zombies: %v. Number of Humans: %v\n", ApocalypseServer.GetNumEntity(extendedAgents.ZomboSapien), ApocalypseServer.GetNumEntity(extendedAgents.HomoSapien))
-	setupEnvironment.CreateExits(ApocalypseServer)
+	//setupEnvironment.CreateExits(ApocalypseServer)
 	setupEnvironment.CreateMaze(ApocalypseServer)
 	for i := 0; i < 5; i++ {
 		for _, ag := range ApocalypseServer.GetAgentMap() {

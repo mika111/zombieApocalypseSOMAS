@@ -139,7 +139,7 @@ func (server *ApocalypseServer) ExportState(filePath string) {
 		Exits:           server.Exits,
 		ZombiePositions: server.GetEntityLocations(extendedAgents.ZomboSapien),
 		HumanPositions:  server.GetEntityLocations(extendedAgents.HomoSapien),
-		BorderSize:      5,
+		BorderSize:      10,
 	}
 
 	gameStateJSON, _ := json.Marshal(state)
