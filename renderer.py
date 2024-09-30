@@ -3,20 +3,20 @@ import pygame
 jsonFile = open("state.json","r")
 jsonData = json.load(jsonFile)
 scaleX,scaleY = 1,1 #used to scale the display wrt to the size of the simulation map. 
-borderSize = 10 #thickness of border around map. 
+borderSize = jsonData["BorderSize"] #thickness of border around map. 
 exitColour = (255,255,255) 
 zombieColour = (255,0,0) 
 humanColour = (255,255,0) 
 wallColour = (0,0,255)
 def initialiseDisplay(stateData):
-     width = borderSize+scaleX*jsonData["MapSize"]["X"]
-     height = borderSize+scaleY*jsonData["MapSize"]["Y"]
+     width = borderSize+scaleX*stateData["MapSize"]["X"]
+     height = borderSize+scaleY*stateData["MapSize"]["Y"]
      pygame.init()
      clock = pygame.time.Clock()
      screen = pygame.display.set_mode([width,height])
      topBorder = pygame.Rect(0,0,width,borderSize)
-     bottomBorder = pygame.Rect(0,height-10,width,borderSize)
-     rightBorder = pygame.Rect(width-10,0,borderSize,height)
+     bottomBorder = pygame.Rect(0,height-borderSize,width,borderSize)
+     rightBorder = pygame.Rect(width-borderSize,0,borderSize,height)
      leftBorder = pygame.Rect(0,0,borderSize,height)
      pygame.draw.rect(screen,wallColour,topBorder)
      pygame.draw.rect(screen,wallColour,bottomBorder)
@@ -34,12 +34,12 @@ def createWall(wall):
 def createExit(exit):
     pointA = (exit["PointA"]["X"]+ borderSize,exit["PointA"]["Y"]+borderSize)
     pointB = (exit["PointB"]["X"]+borderSize,exit["PointB"]["Y"]+borderSize)
-    print(pointA,pointB)
+    #print(pointA,pointB)
     width = max(1,abs(pointA[0]-pointB[0]))    # In 2D space an exit is a line segment and therefore has only 1 dimension
     height = max(1,abs(pointA[1]-pointB[1]))     # Therefore either height or width will be 0 and we set it to 1 to render to screen
     top = min(pointA[1],pointB[1])
     left = min(pointA[0],pointB[0])
-    print(top,left,width,height)
+    #print(top,left,width,height)
     return pygame.Rect(left,top,width,height)
 
 def generateFrame(screen,jsonData):

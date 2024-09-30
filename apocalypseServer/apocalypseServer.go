@@ -21,7 +21,7 @@ type IApocalypseServer interface {
 type ApocalypseServer struct {
 	*server.BaseServer[extendedAgents.IApocalypseEntity]
 	RandNumGenerator *rand.Rand
-	mapSize          physicsEngine.Vector2D
+	MapSize          physicsEngine.Vector2D
 	Walls            []Wall
 	Exits            []Exit
 }
@@ -37,6 +37,15 @@ type Wall struct {
 	BottomRightCorner physicsEngine.Vector2D
 }
 
+type PointPair struct {
+	PointA physicsEngine.Vector2D
+	PointB physicsEngine.Vector2D
+}
+
+func CreatePointPair(x, y physicsEngine.Vector2D) PointPair {
+	return PointPair{PointA: x, PointB: y}
+}
+
 type gameState struct {
 	//This json will be fed to a renderer to render a visualisation of the current game state
 	RoundNum        int
@@ -45,14 +54,15 @@ type gameState struct {
 	Exits           []Exit
 	ZombiePositions []physicsEngine.Vector2D
 	HumanPositions  []physicsEngine.Vector2D
+	BorderSize      float32
 }
 
 func CreateApocalypseServer(numZombies, numHumans, iterations, turns int, maxDuration time.Duration, maxThreads int, width, height float32) *ApocalypseServer {
 	server := &ApocalypseServer{
-		BaseServer:       server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
-		Walls:            make([]Wall, 0),
-		Exits:            make([]Exit, 0),
-		mapSize:          physicsEngine.MakeVec2D(width, height),
+		BaseServer: server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
+		Walls:      make([]Wall, 0),
+		Exits:      make([]Exit, 0),
+		MapSize:    physicsEngine.MakeVec2D(width, height),
 	}
 	for i := 0; i < numZombies; i++ {
 		zombie := server.SpawnNewZombie(10.0, server.GenerateRandomPosition())
@@ -124,11 +134,12 @@ func (server *ApocalypseServer) ExportState(filePath string) {
 
 	state := gameState{
 		RoundNum:        2,
-		MapSize:         server.mapSize,
+		MapSize:         server.MapSize,
 		Walls:           server.Walls,
 		Exits:           server.Exits,
 		ZombiePositions: server.GetEntityLocations(extendedAgents.ZomboSapien),
 		HumanPositions:  server.GetEntityLocations(extendedAgents.HomoSapien),
+		BorderSize:      5,
 	}
 
 	gameStateJSON, _ := json.Marshal(state)
@@ -140,7 +151,42 @@ func (server *ApocalypseServer) ExportState(filePath string) {
 func (server *ApocalypseServer) GenerateRandomPosition() physicsEngine.Vector2D {
 	//Generate a normally distributed position
 	vec2 := physicsEngine.Vector2D{X: 0, Y: 0}
-	vec2.Y = server.mapSize.Y * (float32(rand.NormFloat64()) + 1) / 2
-	vec2.X = server.mapSize.X * (float32(rand.NormFloat64()) + 1) / 2
+	vec2.Y = server.MapSize.Y * (float32(rand.NormFloat64()) + 1) / 2
+	vec2.X = server.MapSize.X * (float32(rand.NormFloat64()) + 1) / 2
 	return vec2
+}
+
+func (server *ApocalypseServer) CreateWalls(thickness float32, wallCoords []PointPair) {
+	for _, wallCoord := range wallCoords {
+		pointA := wallCoord.PointA
+		pointB := wallCoord.PointB
+		var wall Wall
+		if pointA.X == pointB.X {
+			if pointA.Y > pointB.Y {
+				wall.TopLeftCorner = pointA
+				wall.TopLeftCorner.X -= thickness
+				wall.BottomRightCorner = pointB
+				wall.BottomRightCorner.X += thickness
+			} else {
+				wall.TopLeftCorner = pointB
+				wall.TopLeftCorner.X -= thickness
+				wall.BottomRightCorner = pointA
+				wall.BottomRightCorner.X += thickness
+			}
+		} else {
+			if pointA.X > pointB.X {
+				wall.TopLeftCorner = pointB
+				wall.TopLeftCorner.Y += thickness
+				wall.BottomRightCorner = pointA
+				wall.BottomRightCorner.Y -= thickness
+			} else {
+				wall.TopLeftCorner = pointA
+				wall.TopLeftCorner.Y += thickness
+				wall.BottomRightCorner = pointB
+				wall.BottomRightCorner.Y -= thickness
+			}
+		}
+		server.Walls = append(server.Walls, wall)
+	}
+
 }

@@ -2,23 +2,16 @@ package main
 
 import (
 	"time"
-	apocalypseServer "zombieApocalypeSOMAS/environments"
+	"zombieApocalypeSOMAS/apocalypseServer"
 	"zombieApocalypeSOMAS/physicsEngine"
+	"zombieApocalypeSOMAS/setupEnvironment"
 )
 
-func CreateEnvironment(server *apocalypseServer.ApocalypseServer) {
-	server.AddWall(physicsEngine.MakeVec2D(10.2, 200.2), physicsEngine.MakeVec2D(15.2, 100.2))
-}
-
-func CreateExits(server *apocalypseServer.ApocalypseServer) {
-	server.AddExit(physicsEngine.MakeVec2D(0, 0), physicsEngine.MakeVec2D(0, 100))
-	server.AddExit(physicsEngine.MakeVec2D(10, 0), physicsEngine.MakeVec2D(200, 0))
-}
 func main() {
-	ApocalypseServer := apocalypseServer.CreateApocalypseServer(100, 100, 1, 1, time.Millisecond, 100, 700, 500)
+	ApocalypseServer := apocalypseServer.CreateApocalypseServer(100, 100, 1, 1, time.Millisecond, 100, 700, 700)
 	//fmt.Printf("Number of Zombies: %v. Number of Humans: %v\n", ApocalypseServer.GetNumEntity(extendedAgents.ZomboSapien), ApocalypseServer.GetNumEntity(extendedAgents.HomoSapien))
-	CreateExits(ApocalypseServer)
-	CreateEnvironment(ApocalypseServer)
+	setupEnvironment.CreateExits(ApocalypseServer)
+	setupEnvironment.CreateMaze(ApocalypseServer)
 	for i := 0; i < 5; i++ {
 		for _, ag := range ApocalypseServer.GetAgentMap() {
 			//fmt.Println("Initial physical state")
