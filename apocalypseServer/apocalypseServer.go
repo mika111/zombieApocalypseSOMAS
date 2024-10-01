@@ -26,14 +26,7 @@ type ApocalypseServer struct {
 	Maze             [][]int
 }
 
-type Exit struct {
-	//Exit is a line segment in 2D space defined by two points
-	PointA physicsEngine.Vector2D
-	PointB physicsEngine.Vector2D
-}
-
 type gameState struct {
-	//This json will be fed to a renderer to render a visualisation of the current game state
 	RoundNum        int
 	MapSize         physicsEngine.Vector2D
 	ZombiePositions []physicsEngine.Vector2D
@@ -48,26 +41,29 @@ func (seed ApocalypeSeed) Uint64() uint64 {
 	return uint64(seed)
 }
 
-func CreateApocalypseServer(numZombies, numHumans, iterations, turns int, maxDuration time.Duration, maxThreads int, width, height int, mazeSeed ApocalypeSeed) *ApocalypseServer {
-
-	server := &ApocalypseServer{
+func CreateApocalypseServer(iterations, turns int, maxDuration time.Duration, maxThreads int, width, height int, mazeSeed ApocalypeSeed) *ApocalypseServer {
+	return &ApocalypseServer{
 		BaseServer:       server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
 		RandNumGenerator: rand.New(rand.Source(mazeSeed)),
 		MapSize:          physicsEngine.MakeVec2D(width, height),
 		Maze:             nil,
 	}
+}
 
-	mazeGen := mazeGenerator.CreateMazeGenerator(width, height, width-1, height-1, server.RandNumGenerator)
-	server.Maze = mazeGen.CreateMaze(0, 0)
-	// for i := 0; i < numZombies; i++ {
-	// 	zombie := server.SpawnNewZombie(10.0, server.GenerateRandomPosition())
-	// 	server.AddAgent(zombie)
-	// }
-	// for i := 0; i < numHumans; i++ {
-	// 	human := server.SpawnNewHuman(10.0, server.GenerateRandomPosition())
-	// 	server.AddAgent(human)
-	// }
-	return server
+func (serv *ApocalypseServer) InjectAgents(numHumans, numZombies int) {
+	for i := 0; i < numZombies; i++ {
+		zombie := serv.SpawnNewZombie(10.0, serv.GenerateRandomPosition())
+		serv.AddAgent(zombie)
+	}
+	for i := 0; i < numHumans; i++ {
+		human := serv.SpawnNewHuman(10.0, serv.GenerateRandomPosition())
+		serv.AddAgent(human)
+	}
+}
+
+func (serv *ApocalypseServer) GenerateMaze(entrance_i, entrance_j, exit_i, exit_j int) {
+	mazeGen := mazeGenerator.CreateMazeGenerator(serv.MapSize.X, serv.MapSize.Y, exit_i, exit_j, serv.RandNumGenerator)
+	serv.Maze = mazeGen.CreateMaze(entrance_i, entrance_j)
 }
 
 func (serv *ApocalypseServer) SpawnNewHuman(mass int, initialPosition physicsEngine.Vector2D) *extendedAgents.Human {
@@ -112,28 +108,6 @@ func (server *ApocalypseServer) GetEntityLocations(entity extendedAgents.Species
 	}
 	return entityLocations
 }
-
-// func (server *ApocalypseServer) AddExit(point1, point2 physicsEngine.Vector2D) {
-// 	exit := Exit{PointA: point1,
-// 		PointB: point2}
-// 	xMin, xMax := exit.PointA.X, exit.PointB.X
-
-// 	if xMin > xMax {
-// 		xMin, xMax = exit.PointB.X, exit.PointA.X
-// 	}
-// 	yMin, yMax := exit.PointA.Y, exit.PointB.Y
-// 	if yMin > yMax {
-// 		yMin, yMax = yMax, yMin
-// 	}
-
-// 	for x := xMin; x <= xMax; x++ {
-
-// 		for y := yMin; y <= yMax; y++ {
-
-// 			server.Maze[y][x] = 2
-// 		}
-// 	}
-// }
 
 func (server *ApocalypseServer) ExportState(filePath string) {
 	state := gameState{
