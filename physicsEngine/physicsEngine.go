@@ -5,8 +5,8 @@ import (
 )
 
 type Vector2D struct {
-	X float32
-	Y float32
+	X int
+	Y int
 }
 
 func ZeroVector() Vector2D {
@@ -18,7 +18,7 @@ func (v2d *Vector2D) Add(vec Vector2D) {
 	v2d.Y += vec.Y
 }
 
-func (v2d *Vector2D) Div(k float32) Vector2D {
+func (v2d *Vector2D) Div(k int) Vector2D {
 	return Vector2D{
 		X: v2d.X / k,
 		Y: v2d.Y / k,
@@ -29,7 +29,7 @@ func (v2d *Vector2D) Print() {
 	fmt.Printf("[%v,%v]", v2d.X, v2d.Y)
 }
 
-func MakeVec2D(X, Y float32) Vector2D {
+func MakeVec2D(X, Y int) Vector2D {
 	return Vector2D{X: X,
 		Y: Y}
 }
@@ -37,7 +37,7 @@ func MakeVec2D(X, Y float32) Vector2D {
 type PhysicalState struct {
 	Position *Vector2D
 	Velocity *Vector2D
-	Mass     float32
+	Mass     int
 }
 
 func (ps *PhysicalState) UpdatePhysicalState(force Vector2D) {
@@ -55,7 +55,7 @@ func (ps *PhysicalState) GetPhysicalState() PhysicalState {
 }
 
 func (ps *PhysicalState) PrintPhysicalState() {
-	fmt.Printf("Position: %f. Velocity: %f. Mass: %f\n", ps.Position, ps.Velocity, ps.Mass)
+	fmt.Printf("Position: %v. Velocity: %v. Mass: %v\n", ps.Position, ps.Velocity, ps.Mass)
 }
 
 type IPhysicsObject interface {
@@ -64,6 +64,6 @@ type IPhysicsObject interface {
 	PrintPhysicalState()
 }
 
-func CreateInitialPhysicalState(initialPosition *Vector2D, mass float32) *PhysicalState {
+func CreateInitialPhysicalState(initialPosition *Vector2D, mass int) *PhysicalState {
 	return &PhysicalState{Position: initialPosition, Velocity: &Vector2D{X: 0, Y: 0}, Mass: mass}
 }

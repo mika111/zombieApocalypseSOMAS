@@ -2,12 +2,13 @@ import json
 import pygame
 jsonFile = open("state.json","r")
 jsonData = json.load(jsonFile)
-scaleX,scaleY = 1,1 #used to scale the display wrt to the size of the simulation map. 
-borderSize = jsonData["BorderSize"] #thickness of border around map. 
+scaleX,scaleY = 5,5 #used to scale the display wrt to the size of the simulation map. 
+borderSize = 5 #thickness of border around map. 
 exitColour = (255,255,255) 
 zombieColour = (255,0,0) 
 humanColour = (255,255,0) 
 wallColour = (0,0,255)
+backgroundColour = (0,0,0)
 def initialiseDisplay(stateData):
      width = borderSize+scaleX*stateData["MapSize"]["X"]
      height = borderSize+scaleY*stateData["MapSize"]["Y"]
@@ -24,31 +25,17 @@ def initialiseDisplay(stateData):
      pygame.draw.rect(screen,wallColour,leftBorder)
      return screen,clock
 
-
-
-def createWall(wall):
-    height = scaleY*(wall["TopLeftCorner"]["Y"] - wall["BottomRightCorner"]["Y"])
-    width = scaleX*(wall["BottomRightCorner"]["X"] - wall["TopLeftCorner"]["X"])
-    return pygame.Rect(scaleX*wall["TopLeftCorner"]["X"]+borderSize,scaleY*wall["BottomRightCorner"]["Y"]+borderSize,width,height)
-
-def createExit(exit):
-    pointA = (exit["PointA"]["X"]+ borderSize,exit["PointA"]["Y"]+borderSize)
-    pointB = (exit["PointB"]["X"]+borderSize,exit["PointB"]["Y"]+borderSize)
-    #print(pointA,pointB)
-    width = max(1,abs(pointA[0]-pointB[0]))    # In 2D space an exit is a line segment and therefore has only 1 dimension
-    height = max(1,abs(pointA[1]-pointB[1]))     # Therefore either height or width will be 0 and we set it to 1 to render to screen
-    top = min(pointA[1],pointB[1])
-    left = min(pointA[0],pointB[0])
-    #print(top,left,width,height)
-    return pygame.Rect(left,top,width,height)
-
 def generateFrame(screen,jsonData):
-    for wall in jsonData["Walls"]:
-        wallRect = createWall(wall)
-        pygame.draw.rect(screen,wallColour,wallRect)
-    for exit in jsonData["Exits"]:
-        exitRect = createExit(exit)
-        pygame.draw.rect(screen,exitColour,exitRect)
+    color = {
+        0 :backgroundColour,
+        1 : wallColour,
+        2:exitColour,
+    }
+    for x in range(len(jsonData['Maze'])):
+        for y in range(len(jsonData['Maze'][0])):
+            rect = pygame.Rect(x*scaleX+borderSize,y*scaleY+borderSize,scaleX,scaleY)
+            pygame.draw.rect(screen,color[jsonData['Maze'][x][y]],rect)
+
     for humanLocation in jsonData["HumanPositions"]:
         location = (scaleX*humanLocation["X"] + borderSize,scaleY*humanLocation["Y"]+ borderSize)
         pygame.draw.circle(screen,humanColour,location,1)

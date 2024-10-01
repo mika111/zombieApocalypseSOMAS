@@ -22,8 +22,7 @@ type ApocalypseServer struct {
 	*server.BaseServer[extendedAgents.IApocalypseEntity]
 	RandNumGenerator *rand.Rand
 	MapSize          physicsEngine.Vector2D
-	Walls            []Wall
-	Exits            []Exit
+	Maze             [][]int
 }
 
 type Exit struct {
@@ -32,50 +31,46 @@ type Exit struct {
 	PointB physicsEngine.Vector2D
 }
 
-type Wall struct {
-	TopLeftCorner     physicsEngine.Vector2D
-	BottomRightCorner physicsEngine.Vector2D
-}
-
-type PointPair struct {
-	PointA physicsEngine.Vector2D
-	PointB physicsEngine.Vector2D
-}
-
-func CreatePointPair(x, y physicsEngine.Vector2D) PointPair {
-	return PointPair{PointA: x, PointB: y}
-}
-
 type gameState struct {
 	//This json will be fed to a renderer to render a visualisation of the current game state
 	RoundNum        int
 	MapSize         physicsEngine.Vector2D
-	Walls           []Wall
-	Exits           []Exit
 	ZombiePositions []physicsEngine.Vector2D
 	HumanPositions  []physicsEngine.Vector2D
-	BorderSize      float32
+	Maze            [][]int
+	BorderSize      int
 }
 
-func CreateApocalypseServer(numZombies, numHumans, iterations, turns int, maxDuration time.Duration, maxThreads int, width, height float32) *ApocalypseServer {
+func initiliaseMaze(rows, cols int) [][]int {
+	maze := make([][]int, rows)
+	for x := range maze {
+		maze[x] = make([]int, cols)
+		for y := range maze[x] {
+			maze[x][y] = 1
+		}
+	}
+	return maze
+}
+
+func CreateApocalypseServer(numZombies, numHumans, iterations, turns int, maxDuration time.Duration, maxThreads int, width, height, mazeSeed int) *ApocalypseServer {
+
 	server := &ApocalypseServer{
 		BaseServer: server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
-		Walls:      make([]Wall, 0),
-		Exits:      make([]Exit, 0),
 		MapSize:    physicsEngine.MakeVec2D(width, height),
+		Maze:       initiliaseMaze(width, height),
 	}
-	for i := 0; i < numZombies; i++ {
-		zombie := server.SpawnNewZombie(10.0, server.GenerateRandomPosition())
-		server.AddAgent(zombie)
-	}
-	for i := 0; i < numHumans; i++ {
-		human := server.SpawnNewHuman(10.0, server.GenerateRandomPosition())
-		server.AddAgent(human)
-	}
+	// for i := 0; i < numZombies; i++ {
+	// 	zombie := server.SpawnNewZombie(10.0, server.GenerateRandomPosition())
+	// 	server.AddAgent(zombie)
+	// }
+	// for i := 0; i < numHumans; i++ {
+	// 	human := server.SpawnNewHuman(10.0, server.GenerateRandomPosition())
+	// 	server.AddAgent(human)
+	// }
 	return server
 }
 
-func (serv *ApocalypseServer) SpawnNewHuman(mass float32, initialPosition physicsEngine.Vector2D) *extendedAgents.Human {
+func (serv *ApocalypseServer) SpawnNewHuman(mass int, initialPosition physicsEngine.Vector2D) *extendedAgents.Human {
 	entity := &extendedAgents.ApocalypseEntity{
 		BaseAgent:     agent.CreateBaseAgent(serv),
 		PhysicalState: physicsEngine.CreateInitialPhysicalState(&initialPosition, mass),
@@ -84,7 +79,7 @@ func (serv *ApocalypseServer) SpawnNewHuman(mass float32, initialPosition physic
 	return human
 }
 
-func (serv *ApocalypseServer) SpawnNewZombie(mass float32, initialPosition physicsEngine.Vector2D) *extendedAgents.Zombie {
+func (serv *ApocalypseServer) SpawnNewZombie(mass int, initialPosition physicsEngine.Vector2D) *extendedAgents.Zombie {
 	entity := &extendedAgents.ApocalypseEntity{
 		BaseAgent:     agent.CreateBaseAgent(serv),
 		PhysicalState: physicsEngine.CreateInitialPhysicalState(&initialPosition, mass),
@@ -118,27 +113,35 @@ func (server *ApocalypseServer) GetEntityLocations(entity extendedAgents.Species
 	return entityLocations
 }
 
-func (server *ApocalypseServer) AddWall(topLeft, bottomRight physicsEngine.Vector2D) {
-	wall := Wall{TopLeftCorner: topLeft,
-		BottomRightCorner: bottomRight}
-	server.Walls = append(server.Walls, wall)
-}
-
 func (server *ApocalypseServer) AddExit(point1, point2 physicsEngine.Vector2D) {
 	exit := Exit{PointA: point1,
 		PointB: point2}
-	server.Exits = append(server.Exits, exit)
+	xMin, xMax := exit.PointA.X, exit.PointB.X
+
+	if xMin > xMax {
+		xMin, xMax = exit.PointB.X, exit.PointA.X
+	}
+	yMin, yMax := exit.PointA.Y, exit.PointB.Y
+	if yMin > yMax {
+		yMin, yMax = yMax, yMin
+	}
+
+	for x := xMin; x <= xMax; x++ {
+
+		for y := yMin; y <= yMax; y++ {
+
+			server.Maze[y][x] = 2
+		}
+	}
 }
 
 func (server *ApocalypseServer) ExportState(filePath string) {
-
 	state := gameState{
 		RoundNum:        2,
 		MapSize:         server.MapSize,
-		Walls:           server.Walls,
-		Exits:           server.Exits,
 		ZombiePositions: server.GetEntityLocations(extendedAgents.ZomboSapien),
 		HumanPositions:  server.GetEntityLocations(extendedAgents.HomoSapien),
+		Maze:            server.Maze,
 		BorderSize:      10,
 	}
 
@@ -151,42 +154,62 @@ func (server *ApocalypseServer) ExportState(filePath string) {
 func (server *ApocalypseServer) GenerateRandomPosition() physicsEngine.Vector2D {
 	//Generate a normally distributed position
 	vec2 := physicsEngine.Vector2D{X: 0, Y: 0}
-	vec2.Y = server.MapSize.Y * (float32(rand.NormFloat64()) + 1) / 2
-	vec2.X = server.MapSize.X * (float32(rand.NormFloat64()) + 1) / 2
+	vec2.Y = rand.IntN(server.MapSize.Y)
+	vec2.X = rand.IntN(server.MapSize.X)
 	return vec2
 }
 
-func (server *ApocalypseServer) CreateWalls(thickness float32, wallCoords []PointPair) {
-	for _, wallCoord := range wallCoords {
-		pointA := wallCoord.PointA
-		pointB := wallCoord.PointB
-		var wall Wall
-		if pointA.X == pointB.X {
-			if pointA.Y > pointB.Y {
-				wall.TopLeftCorner = pointA
-				wall.TopLeftCorner.X -= thickness
-				wall.BottomRightCorner = pointB
-				wall.BottomRightCorner.X += thickness
-			} else {
-				wall.TopLeftCorner = pointB
-				wall.TopLeftCorner.X -= thickness
-				wall.BottomRightCorner = pointA
-				wall.BottomRightCorner.X += thickness
-			}
-		} else {
-			if pointA.X > pointB.X {
-				wall.TopLeftCorner = pointB
-				wall.TopLeftCorner.Y += thickness
-				wall.BottomRightCorner = pointA
-				wall.BottomRightCorner.Y -= thickness
-			} else {
-				wall.TopLeftCorner = pointA
-				wall.TopLeftCorner.Y += thickness
-				wall.BottomRightCorner = pointB
-				wall.BottomRightCorner.Y -= thickness
-			}
-		}
-		server.Walls = append(server.Walls, wall)
+func (server *ApocalypseServer) CreateMaze(seed uint64) {
+	//this function is seeded so that "random" mazes can be regenerated for multiple experiments
+	randomSource := rand.NewPCG(seed, seed+26)
+	generator := rand.New(randomSource)
+	unitVectors := [][]int{
+		{0, 1},
+		{1, 0},
+		{0, -1},
+		{-1, 0},
 	}
+	state := genMaze(server.Maze, unitVectors, server.MapSize.X, server.MapSize.Y, 0, 0, generator)
+	if !state {
+		panic("couldnt generate solvable maze. Did you forget to add exits?")
+	}
+}
 
+func outOfBoundsCheck(xMax, yMax, x, y int) bool {
+	//fmt.Println("checking", x, y)
+	if x < 0 || x >= xMax {
+		return true
+	} else if y < 0 || y >= yMax {
+		return true
+	} else {
+		return false
+	}
+}
+
+func genMaze(maze, unitVectors [][]int, xMax, yMax, x, y int, generator *rand.Rand) bool {
+	state := false
+	if maze[x][y] == 2 {
+		return true
+	}
+	generator.Shuffle(4, func(i, j int) {
+		unitVectors[i], unitVectors[j] = unitVectors[j], unitVectors[i]
+	})
+	maze[x][y] = 0
+	for _, coords := range unitVectors {
+		dx := coords[0]
+		dy := coords[1]
+		x1, y1 := x+dx, y+dy
+		x2, y2 := x1+dx, y1+dy
+		if outOfBoundsCheck(xMax, yMax, x2, y2) {
+			continue
+		}
+		if maze[x2][y2] == 0 {
+			continue
+		}
+		maze[x1][y1] = 0
+		if genMaze(maze, unitVectors, xMax, yMax, x2, y2, generator) {
+			state = true
+		}
+	}
+	return state
 }
