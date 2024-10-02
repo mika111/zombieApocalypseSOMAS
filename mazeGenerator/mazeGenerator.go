@@ -25,10 +25,8 @@ type MazeGenerator struct {
 	generator *rand.Rand
 }
 
-func (mg *MazeGenerator) generateInitialMaze(i, j int) {
-	if mg.isOutOfBounds(i, j) {
-		panic("Exit to maze is outside of dimensions")
-	}
+func (mg *MazeGenerator) generateInitialMaze() {
+
 	array := make([][]int, mg.M)
 	for i := range array {
 		array[i] = make([]int, mg.N)
@@ -36,11 +34,11 @@ func (mg *MazeGenerator) generateInitialMaze(i, j int) {
 			array[i][j] = 1
 		}
 	}
-	array[i][j] = 2
+
 	mg.maze = array
 }
 
-func CreateMazeGenerator(M, N, exit_i, exit_j int, generator *rand.Rand) *MazeGenerator {
+func CreateMazeGenerator(M, N int, generator *rand.Rand) *MazeGenerator {
 	if M&N&1 == 0 {
 		panic("Both maze dimensions must be odd")
 	}
@@ -56,18 +54,23 @@ func CreateMazeGenerator(M, N, exit_i, exit_j int, generator *rand.Rand) *MazeGe
 		},
 		generator: generator,
 	}
-	mazeGen.generateInitialMaze(exit_i, exit_j)
+	mazeGen.generateInitialMaze()
 	return mazeGen
 }
 
-func (mg *MazeGenerator) CreateMaze(entrance_i, entrance_j int) Maze {
+func (mg *MazeGenerator) CreateMaze(entrance_i, entrance_j, exit_i, exit_j int) Maze {
 	if mg.isOutOfBounds(entrance_i, entrance_j) {
 		panic("Entrance to maze is outside of dimensions")
 	}
+	if mg.isOutOfBounds(exit_i, exit_j) {
+		panic("Exit to maze is outside of dimensions")
+	}
+	mg.maze[exit_i][exit_j] = 2
 	state := mg.genMaze(entrance_i, entrance_j)
 	if !state {
 		panic("couldnt generate solvable maze. Did you forget to add exits?")
 	}
+
 	return mg.maze
 }
 
@@ -86,7 +89,10 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 		return true
 	}
 	state := false
-	mg.generator.Shuffle(4, func(i, j int) {
+	// mg.generator.Shuffle(4, func(i, j int) {
+	// 	mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
+	// })
+	rand.Shuffle(4, func(i, j int) {
 		mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
 	})
 	mg.maze[i][j] = 0
@@ -106,3 +112,5 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 // 	mg.maze.Print()
 // 	return mg.maze
 // }
+
+

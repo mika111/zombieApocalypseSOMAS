@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	serv := apocalypseServer.CreateApocalypseServer(1, 1, time.Millisecond, 100, 25, 25, 54)
+	serv := apocalypseServer.CreateApocalypseServer(1, 1, time.Millisecond, 100, 101, 101, 54)
 	serv.GenerateMaze(0, 0, serv.MapSize.X-1, serv.MapSize.Y-1)
 	serv.InjectAgents(10, 10)
 

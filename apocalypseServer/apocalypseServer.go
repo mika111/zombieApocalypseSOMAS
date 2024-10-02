@@ -41,10 +41,10 @@ func (seed ApocalypeSeed) Uint64() uint64 {
 	return uint64(seed)
 }
 
-func CreateApocalypseServer(iterations, turns int, maxDuration time.Duration, maxThreads int, width, height int, mazeSeed ApocalypeSeed) *ApocalypseServer {
+func CreateApocalypseServer(iterations, turns int, maxDuration time.Duration, maxThreads int, width, height int, mazeSeed uint64) *ApocalypseServer {
 	return &ApocalypseServer{
 		BaseServer:       server.CreateServer[extendedAgents.IApocalypseEntity](iterations, turns, maxDuration, maxThreads),
-		RandNumGenerator: rand.New(rand.Source(mazeSeed)),
+		RandNumGenerator: rand.New(rand.NewPCG(mazeSeed, mazeSeed)),
 		MapSize:          physicsEngine.MakeVec2D(width, height),
 		Maze:             nil,
 	}
@@ -62,8 +62,8 @@ func (serv *ApocalypseServer) InjectAgents(numHumans, numZombies int) {
 }
 
 func (serv *ApocalypseServer) GenerateMaze(entrance_i, entrance_j, exit_i, exit_j int) {
-	mazeGen := mazeGenerator.CreateMazeGenerator(serv.MapSize.X, serv.MapSize.Y, exit_i, exit_j, serv.RandNumGenerator)
-	serv.Maze = mazeGen.CreateMaze(entrance_i, entrance_j)
+	mazeGen := mazeGenerator.CreateMazeGenerator(serv.MapSize.X, serv.MapSize.Y, serv.RandNumGenerator)
+	serv.Maze = mazeGen.CreateMaze(entrance_i, entrance_j, exit_i, exit_j)
 }
 
 func (serv *ApocalypseServer) SpawnNewHuman(mass int, initialPosition physicsEngine.Vector2D) *extendedAgents.Human {

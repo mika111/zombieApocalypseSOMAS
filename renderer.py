@@ -4,14 +4,14 @@ jsonFile = open("state.json","r")
 jsonData = json.load(jsonFile)
 scaleX,scaleY = 5,5 #used to scale the display wrt to the size of the simulation map. 
 borderSize = 5 #thickness of border around map. 
-exitColour = (255,255,255) 
+exitColour = (255,0,255) 
 zombieColour = (255,0,0) 
 humanColour = (255,255,0) 
-wallColour = (0,0,255)
+wallColour = (255,255,255)
 backgroundColour = (0,0,0)
 def initialiseDisplay(stateData):
-     width = borderSize+scaleX*stateData["MapSize"]["X"]
-     height = borderSize+scaleY*stateData["MapSize"]["Y"]
+     width = 2*borderSize+scaleX*stateData["MapSize"]["X"]
+     height = 2*borderSize+scaleY*stateData["MapSize"]["Y"]
      pygame.init()
      clock = pygame.time.Clock()
      screen = pygame.display.set_mode([width,height])
