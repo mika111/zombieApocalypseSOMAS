@@ -1,8 +1,12 @@
 package mazeGenerator
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"math/rand/v2"
+	"os"
 	"zombieApocalypeSOMAS/physicsEngine"
 )
 
@@ -23,6 +27,12 @@ type MazeGenerator struct {
 	maze      Maze
 	dirs      []physicsEngine.Vector2D
 	generator *rand.Rand
+	DirArray  [][]physicsEngine.Vector2D
+	i         int
+}
+
+type ShuffleOrderings struct {
+	DirArray [][]physicsEngine.Vector2D
 }
 
 func (mg *MazeGenerator) generateInitialMaze() {
@@ -34,13 +44,27 @@ func (mg *MazeGenerator) generateInitialMaze() {
 			array[i][j] = 1
 		}
 	}
-
 	mg.maze = array
 }
 
 func CreateMazeGenerator(M, N int, generator *rand.Rand) *MazeGenerator {
+
 	if M&N&1 == 0 {
 		panic("Both maze dimensions must be odd")
+	}
+
+	jsonObject := openJSON("mazeData.json")
+	//fmt.Print(reflect.TypeOf(jsonObject))
+	mazeData := jsonObject.MazeData
+	fmt.Println("length of json", len(mazeData))
+	mazeArr := make([][]physicsEngine.Vector2D, len(mazeData))
+	for i := range mazeData {
+		subArray := make([]physicsEngine.Vector2D, 4)
+		for j, mazePoint := range mazeData[i] {
+			subArray[j] = physicsEngine.Vector2D{X: mazePoint[0], Y: mazePoint[1]}
+		}
+
+		mazeArr[i] = subArray
 	}
 	mazeGen := &MazeGenerator{
 		M:    M,
@@ -53,12 +77,15 @@ func CreateMazeGenerator(M, N int, generator *rand.Rand) *MazeGenerator {
 			{X: -1, Y: 0},
 		},
 		generator: generator,
+		DirArray:  mazeArr,
+		i:         0,
 	}
 	mazeGen.generateInitialMaze()
 	return mazeGen
 }
 
 func (mg *MazeGenerator) CreateMaze(entrance_i, entrance_j, exit_i, exit_j int) Maze {
+
 	if mg.isOutOfBounds(entrance_i, entrance_j) {
 		panic("Entrance to maze is outside of dimensions")
 	}
@@ -70,7 +97,7 @@ func (mg *MazeGenerator) CreateMaze(entrance_i, entrance_j, exit_i, exit_j int) 
 	if !state {
 		panic("couldnt generate solvable maze. Did you forget to add exits?")
 	}
-
+	mg.writeToJSON("mazeObject.json")
 	return mg.maze
 }
 
@@ -85,6 +112,9 @@ func (mg *MazeGenerator) isOutOfBounds(i, j int) bool {
 }
 
 func (mg *MazeGenerator) genMaze(i, j int) bool {
+	if mg.i >= len(mg.DirArray) {
+		return true
+	}
 	if mg.maze[i][j] == 2 {
 		return true
 	}
@@ -92,10 +122,17 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 	// mg.generator.Shuffle(4, func(i, j int) {
 	// 	mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
 	// })
-	rand.Shuffle(4, func(i, j int) {
-		mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
-	})
-	mg.maze[i][j] = 0
+	// newArr := []physicsEngine.Vector2D{
+	// 	mg.dirs[0],
+	// 	mg.dirs[1],
+	// 	mg.dirs[2],
+	// 	mg.dirs[3],
+	// }
+	// mg.DirArray = append(mg.DirArray, newArr)
+	// mg.maze[i][j] = 0
+	//fmt.Println(mg.DirArray)
+	mg.dirs = mg.DirArray[mg.i]
+	mg.i += 1
 	for _, d := range mg.dirs {
 		x1, y1 := i+d.X, j+d.Y
 		x2, y2 := x1+d.X, y1+d.Y
@@ -103,14 +140,42 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 			continue
 		}
 		mg.maze[x1][y1] = 0
-		state = state || mg.genMaze(x2, y2)
+		state = (state || mg.genMaze(x2, y2))
 	}
 	return state
 }
 
-// func (mg *MazeGenerator) GetMaze() Maze {
-// 	mg.maze.Print()
-// 	return mg.maze
-// }
+func (mg *MazeGenerator) writeToJSON(filePath string) {
+	shuffles := ShuffleOrderings{
+		DirArray: mg.DirArray,
+	}
+	fmt.Println(len(mg.DirArray))
+	gameStateJSON, _ := json.Marshal(shuffles)
+	file, _ := os.Create(filePath)
+	defer file.Close()
+	file.Write(gameStateJSON)
+}
 
+type mazeData struct {
+	MazeData [][][]int
+}
 
+func openJSON(filename string) mazeData {
+	file, error := os.Open(filename)
+	if error != nil {
+		log.Fatalf("Failed to open file: %v", error)
+	}
+	defer file.Close()
+
+	byteval, error := io.ReadAll(file)
+	if error != nil {
+		log.Fatalf("Failed to read file: %v", error)
+	}
+	var result mazeData
+	error = json.Unmarshal(byteval, &result)
+	if error != nil {
+		log.Fatalf("Failed to unmarshal JSON: %v", error)
+	}
+	fmt.Println("Got JSON data")
+	return result
+}
