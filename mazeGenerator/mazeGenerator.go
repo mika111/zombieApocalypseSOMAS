@@ -92,8 +92,8 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 	// mg.generator.Shuffle(4, func(i, j int) {
 	// 	mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
 	// })
-	rand.Shuffle(4, func(i, j int) {
-		mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
+	rand.Shuffle(4, func(w, z int) {
+		mg.dirs[z], mg.dirs[w] = mg.dirs[w], mg.dirs[z]
 	})
 	mg.maze[i][j] = 0
 	for _, d := range mg.dirs {
@@ -112,5 +112,3 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 // 	mg.maze.Print()
 // 	return mg.maze
 // }
-
-
