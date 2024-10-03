@@ -104,19 +104,25 @@ func (mg *MazeGenerator) isOutOfBounds(i, j int) bool {
 }
 
 func (mg *MazeGenerator) genMaze(i, j int) bool {
-	state := mg.maze[i][j] == 2
-	if !state {
-		mg.maze[i][j] = 0
+	if mg.maze[i][j] == 2 {
+		return true
 	}
-	for _, d := range GetRandomTraversal(mg.generator) {
-		fmt.Println(d, i, j)
+
+	mg.maze[i][j] = 0
+	state := false
+
+	mg.generator.Shuffle(len(mg.dirs), func(i, j int) {
+		mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
+	})
+
+	for _, d := range mg.dirs {
 		x1, y1 := i+d[0], j+d[1]
 		x2, y2 := x1+d[0], y1+d[1]
 		if mg.isOutOfBounds(x2, y2) || mg.maze[x2][y2] == 0 {
 			continue
 		}
 		mg.maze[x1][y1] = 0
-		state = state || mg.genMaze(x2, y2)
+		state = mg.genMaze(x2, y2) || state
 	}
 	return state
 }
@@ -140,7 +146,6 @@ func (mg *MazeGenerator) mazeIsSolveable() bool {
 	}
 
 	regions := 0
-
 	for i := 0; i < mg.M; i++ {
 		for j := 0; j < mg.N; j++ {
 			if visited[i][j] {
