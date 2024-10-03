@@ -48,22 +48,17 @@ func (mg *MazeGenerator) generateInitialMaze() {
 }
 
 func CreateMazeGenerator(M, N int, generator *rand.Rand) *MazeGenerator {
-
 	if M&N&1 == 0 {
 		panic("Both maze dimensions must be odd")
 	}
-
 	jsonObject := openJSON("mazeData.json")
-	//fmt.Print(reflect.TypeOf(jsonObject))
 	mazeData := jsonObject.MazeData
-	fmt.Println("length of json", len(mazeData))
 	mazeArr := make([][]physicsEngine.Vector2D, len(mazeData))
 	for i := range mazeData {
 		subArray := make([]physicsEngine.Vector2D, 4)
 		for j, mazePoint := range mazeData[i] {
 			subArray[j] = physicsEngine.Vector2D{X: mazePoint[0], Y: mazePoint[1]}
 		}
-
 		mazeArr[i] = subArray
 	}
 	mazeGen := &MazeGenerator{
@@ -85,7 +80,7 @@ func CreateMazeGenerator(M, N int, generator *rand.Rand) *MazeGenerator {
 }
 
 func (mg *MazeGenerator) CreateMaze(entrance_i, entrance_j, exit_i, exit_j int) Maze {
-
+	fmt.Println("length of instructions", len(mg.DirArray))
 	if mg.isOutOfBounds(entrance_i, entrance_j) {
 		panic("Entrance to maze is outside of dimensions")
 	}
@@ -119,18 +114,7 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 		return true
 	}
 	state := false
-	// mg.generator.Shuffle(4, func(i, j int) {
-	// 	mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
-	// })
-	// newArr := []physicsEngine.Vector2D{
-	// 	mg.dirs[0],
-	// 	mg.dirs[1],
-	// 	mg.dirs[2],
-	// 	mg.dirs[3],
-	// }
-	// mg.DirArray = append(mg.DirArray, newArr)
-	// mg.maze[i][j] = 0
-	//fmt.Println(mg.DirArray)
+	mg.maze[i][j] = 0
 	mg.dirs = mg.DirArray[mg.i]
 	mg.i += 1
 	for _, d := range mg.dirs {
@@ -140,7 +124,7 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 			continue
 		}
 		mg.maze[x1][y1] = 0
-		state = (state || mg.genMaze(x2, y2))
+		state = (mg.genMaze(x2, y2))
 	}
 	return state
 }
@@ -149,7 +133,6 @@ func (mg *MazeGenerator) writeToJSON(filePath string) {
 	shuffles := ShuffleOrderings{
 		DirArray: mg.DirArray,
 	}
-	fmt.Println(len(mg.DirArray))
 	gameStateJSON, _ := json.Marshal(shuffles)
 	file, _ := os.Create(filePath)
 	defer file.Close()
