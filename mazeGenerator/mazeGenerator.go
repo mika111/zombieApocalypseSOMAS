@@ -1,16 +1,29 @@
 package mazeGenerator
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"math/rand/v2"
-	"os"
-	"zombieApocalypeSOMAS/physicsEngine"
 )
 
 type Maze [][]int
+
+type MazeGenerator struct {
+	M             int
+	N             int
+	maze          Maze
+	dirs          [][]int
+	generator     *rand.Rand
+	start         []int
+	order         [][][]int
+	openSpace     int
+	exitableSpace int
+}
+type SpaceType int
+
+const (
+	open     SpaceType = 0
+	exitable SpaceType = 3
+)
 
 func (m Maze) Print() {
 	for _, row := range m {
@@ -19,20 +32,6 @@ func (m Maze) Print() {
 		}
 		fmt.Println() // Print a new line at the end of each row
 	}
-}
-
-type MazeGenerator struct {
-	M         int
-	N         int
-	maze      Maze
-	dirs      []physicsEngine.Vector2D
-	generator *rand.Rand
-	DirArray  [][]physicsEngine.Vector2D
-	i         int
-}
-
-type ShuffleOrderings struct {
-	DirArray [][]physicsEngine.Vector2D
 }
 
 func (mg *MazeGenerator) generateInitialMaze() {
@@ -47,40 +46,66 @@ func (mg *MazeGenerator) generateInitialMaze() {
 	mg.maze = array
 }
 
+func (mg *MazeGenerator) countSpace(spaceType SpaceType) {
+	counter := 0
+	for i := range mg.maze {
+		for j := range mg.maze[i] {
+			if SpaceType(mg.maze[i][j]) == spaceType {
+				counter++
+			}
+		}
+	}
+	if spaceType == open {
+		mg.openSpace = counter
+	}
+	if spaceType == exitable {
+		mg.exitableSpace = counter
+	}
+}
+
 func CreateMazeGenerator(M, N int, generator *rand.Rand) *MazeGenerator {
 	if M&N&1 == 0 {
 		panic("Both maze dimensions must be odd")
 	}
-	jsonObject := openJSON("mazeData.json")
-	mazeData := jsonObject.MazeData
-	mazeArr := make([][]physicsEngine.Vector2D, len(mazeData))
-	for i := range mazeData {
-		subArray := make([]physicsEngine.Vector2D, 4)
-		for j, mazePoint := range mazeData[i] {
-			subArray[j] = physicsEngine.Vector2D{X: mazePoint[0], Y: mazePoint[1]}
-		}
-		mazeArr[i] = subArray
-	}
 	mazeGen := &MazeGenerator{
-		M:    M,
-		N:    N,
-		maze: nil,
-		dirs: []physicsEngine.Vector2D{
-			{X: 0, Y: 1},
-			{X: 1, Y: 0},
-			{X: 0, Y: -1},
-			{X: -1, Y: 0},
-		},
+		M:         M,
+		N:         N,
+		maze:      nil,
+		dirs:      nil,
 		generator: generator,
-		DirArray:  mazeArr,
-		i:         0,
+		order: [][][]int{
+			{{-1, 0}, {0, -1}, {1, 0}, {0, 1}},
+			{{-1, 0}, {0, -1}, {0, 1}, {1, 0}},
+			{{-1, 0}, {1, 0}, {0, -1}, {0, 1}},
+			{{-1, 0}, {1, 0}, {0, 1}, {0, -1}},
+			{{-1, 0}, {0, 1}, {0, -1}, {1, 0}},
+			{{-1, 0}, {0, 1}, {1, 0}, {0, -1}},
+			{{0, -1}, {-1, 0}, {1, 0}, {0, 1}},
+			{{0, -1}, {-1, 0}, {0, 1}, {1, 0}},
+			{{0, -1}, {1, 0}, {-1, 0}, {0, 1}},
+			{{0, -1}, {1, 0}, {0, 1}, {-1, 0}},
+			{{0, -1}, {0, 1}, {-1, 0}, {1, 0}},
+			{{0, -1}, {0, 1}, {1, 0}, {-1, 0}},
+			{{1, 0}, {-1, 0}, {0, -1}, {0, 1}},
+			{{1, 0}, {-1, 0}, {0, 1}, {0, -1}},
+			{{1, 0}, {0, -1}, {-1, 0}, {0, 1}},
+			{{1, 0}, {0, -1}, {0, 1}, {-1, 0}},
+			{{1, 0}, {0, 1}, {-1, 0}, {0, -1}},
+			{{1, 0}, {0, 1}, {0, -1}, {-1, 0}},
+			{{0, 1}, {-1, 0}, {0, -1}, {1, 0}},
+			{{0, 1}, {-1, 0}, {1, 0}, {0, -1}},
+			{{0, 1}, {0, -1}, {-1, 0}, {1, 0}},
+			{{0, 1}, {0, -1}, {1, 0}, {-1, 0}},
+			{{0, 1}, {1, 0}, {-1, 0}, {0, -1}},
+			{{0, 1}, {1, 0}, {0, -1}, {-1, 0}},
+		},
 	}
 	mazeGen.generateInitialMaze()
 	return mazeGen
 }
 
 func (mg *MazeGenerator) CreateMaze(entrance_i, entrance_j, exit_i, exit_j int) Maze {
-	fmt.Println("length of instructions", len(mg.DirArray))
+	mg.start = []int{entrance_i, entrance_j}
 	if mg.isOutOfBounds(entrance_i, entrance_j) {
 		panic("Entrance to maze is outside of dimensions")
 	}
@@ -89,10 +114,14 @@ func (mg *MazeGenerator) CreateMaze(entrance_i, entrance_j, exit_i, exit_j int) 
 	}
 	mg.maze[exit_i][exit_j] = 2
 	state := mg.genMaze(entrance_i, entrance_j)
-	if !state {
-		panic("couldnt generate solvable maze. Did you forget to add exits?")
+	fmt.Println(state)
+	mg.checkSolvability()
+	// if !state {
+	// 	panic("couldnt generate solvable maze. Did you forget to add exits?")
+	// }
+	if mg.exitableSpace != mg.openSpace {
+		panic(fmt.Sprintf("some portions of open space in the maze are blocked off. Open Space:%v, Exitable Space: %v", mg.openSpace, mg.exitableSpace))
 	}
-	mg.writeToJSON("mazeObject.json")
 	return mg.maze
 }
 
@@ -107,58 +136,55 @@ func (mg *MazeGenerator) isOutOfBounds(i, j int) bool {
 }
 
 func (mg *MazeGenerator) genMaze(i, j int) bool {
-	if mg.i >= len(mg.DirArray) {
-		return true
-	}
 	if mg.maze[i][j] == 2 {
 		return true
 	}
 	state := false
 	mg.maze[i][j] = 0
-	mg.dirs = mg.DirArray[mg.i]
-	mg.i += 1
+	randint := mg.generator.IntN(23)
+	mg.dirs = mg.order[randint]
 	for _, d := range mg.dirs {
-		x1, y1 := i+d.X, j+d.Y
-		x2, y2 := x1+d.X, y1+d.Y
+		x1, y1 := i+d[0], j+d[1]
+		x2, y2 := x1+d[0], y1+d[1]
 		if mg.isOutOfBounds(x2, y2) || mg.maze[x2][y2] == 0 {
 			continue
 		}
 		mg.maze[x1][y1] = 0
-		state = (mg.genMaze(x2, y2))
+		state = (state || mg.genMaze(x2, y2))
 	}
 	return state
 }
 
-func (mg *MazeGenerator) writeToJSON(filePath string) {
-	shuffles := ShuffleOrderings{
-		DirArray: mg.DirArray,
+func (mg *MazeGenerator) getNeighbours(i, j int) [][]int {
+	potentialNeighbours := [][]int{{i + 1, j},
+		{i - 1, j},
+		{i, j - 1},
+		{i, j + 1}}
+	neighbours := make([][]int, 0)
+	for _, neighbour := range potentialNeighbours {
+		if !mg.isOutOfBounds(neighbour[0], neighbour[1]) && mg.maze[neighbour[0]][neighbour[1]] == 0 {
+			neighbours = append(neighbours, neighbour)
+		}
 	}
-	gameStateJSON, _ := json.Marshal(shuffles)
-	file, _ := os.Create(filePath)
-	defer file.Close()
-	file.Write(gameStateJSON)
+	return neighbours
 }
 
-type mazeData struct {
-	MazeData [][][]int
-}
+func (mg *MazeGenerator) checkSolvability() {
+	mg.countSpace(open)
+	stack := [][]int{mg.start}
 
-func openJSON(filename string) mazeData {
-	file, error := os.Open(filename)
-	if error != nil {
-		log.Fatalf("Failed to open file: %v", error)
+stackNotEmpty:
+	for {
+		lastElemDir := len(stack) - 1
+		if lastElemDir == -1 {
+			break stackNotEmpty
+		}
+		node := stack[lastElemDir]
+		stack = stack[:lastElemDir]
+		i, j := node[0], node[1]
+		mg.maze[i][j] = 3
+		newNeighbours := mg.getNeighbours(i, j)
+		stack = append(stack, newNeighbours...)
 	}
-	defer file.Close()
-
-	byteval, error := io.ReadAll(file)
-	if error != nil {
-		log.Fatalf("Failed to read file: %v", error)
-	}
-	var result mazeData
-	error = json.Unmarshal(byteval, &result)
-	if error != nil {
-		log.Fatalf("Failed to unmarshal JSON: %v", error)
-	}
-	fmt.Println("Got JSON data")
-	return result
+	mg.countSpace(exitable)
 }

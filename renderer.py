@@ -6,6 +6,7 @@ scaleX,scaleY = 5,5 #used to scale the display wrt to the size of the simulation
 borderSize = 5 #thickness of border around map. 
 exitColour = (255,0,255) 
 zombieColour = (255,0,0) 
+validPathColour = (0,255,0)
 humanColour = (255,255,0) 
 wallColour = (255,255,255)
 backgroundColour = (0,0,0)
@@ -30,6 +31,7 @@ def generateFrame(screen,jsonData):
         0 :backgroundColour,
         1 : wallColour,
         2:exitColour,
+        3:validPathColour
     }
     for x in range(len(jsonData['Maze'])):
         for y in range(len(jsonData['Maze'][0])):
