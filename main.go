@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	serv := apocalypseServer.CreateApocalypseServer(1, 1, time.Millisecond, 100, 101, 101, 7848748489)
-	serv.GenerateMaze(0, 0, 99, 99)
+	serv := apocalypseServer.CreateApocalypseServer(1, 1, time.Millisecond, 100, 15, 15, 1234)
+	serv.GenerateMaze(1, 1, 8, 8)
 	serv.InjectAgents(10, 10)
 
 	for i := 0; i < 5; i++ {
