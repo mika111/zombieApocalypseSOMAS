@@ -23,7 +23,7 @@ type ApocalypseServer struct {
 	*server.BaseServer[extendedAgents.IApocalypseEntity]
 	RandNumGenerator *rand.Rand
 	MapSize          physicsEngine.Vector2D
-	Maze             [][]int
+	Maze             mazeGenerator.Maze
 }
 
 type gameState struct {
@@ -31,7 +31,7 @@ type gameState struct {
 	MapSize         physicsEngine.Vector2D
 	ZombiePositions []physicsEngine.Vector2D
 	HumanPositions  []physicsEngine.Vector2D
-	Maze            [][]int
+	Maze            mazeGenerator.Maze
 	BorderSize      int
 }
 
