@@ -10,10 +10,18 @@ type Maze [][]int
 
 func (m Maze) Print() {
 	for _, row := range m {
+		rowStr := ""
 		for _, elem := range row {
-			fmt.Printf("%3d ", elem) // Adjust the width for alignment (e.g., %3d for 3 spaces)
+			if elem == 0 {
+				rowStr += " "
+			} else if elem == 1 {
+				rowStr += "#"
+			} else {
+				rowStr += "*"
+			}
+			rowStr += " "
 		}
-		fmt.Println() // Print a new line at the end of each row
+		fmt.Println(rowStr)
 	}
 }
 
@@ -49,10 +57,10 @@ func CreateMazeGenerator(M, N, exit_i, exit_j int, generator *rand.Rand) *MazeGe
 		N:    N,
 		maze: nil,
 		dirs: []physicsEngine.Vector2D{
-			{X: 0, Y: 1},
-			{X: 1, Y: 0},
-			{X: 0, Y: -1},
 			{X: -1, Y: 0},
+			{X: 0, Y: -1},
+			{X: 1, Y: 0},
+			{X: 0, Y: 1},
 		},
 		generator: generator,
 	}
@@ -89,6 +97,7 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 	mg.generator.Shuffle(4, func(i, j int) {
 		mg.dirs[i], mg.dirs[j] = mg.dirs[j], mg.dirs[i]
 	})
+	// fmt.Println(mg.dirs)
 	mg.maze[i][j] = 0
 	for _, d := range mg.dirs {
 		x1, y1 := i+d.X, j+d.Y
