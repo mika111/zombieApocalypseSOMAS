@@ -14,16 +14,7 @@ type MazeGenerator struct {
 	generator *rand.Rand
 	start     []int
 	dirs      [][]int
-	// openSpace     int
-	// exitableSpace int
 }
-
-// type SpaceType int
-
-// const (
-// 	open     SpaceType = 0
-// 	exitable SpaceType = 3
-// )
 
 func (m Maze) Print() {
 	for _, row := range m {
@@ -38,7 +29,7 @@ func (m Maze) Print() {
 			}
 			rowOut += " "
 		}
-		fmt.Println(rowOut) // Print a new line at the end of each row
+		fmt.Println(rowOut)
 	}
 }
 
@@ -52,23 +43,6 @@ func (mg *MazeGenerator) generateInitialMaze() {
 	}
 	mg.maze = array
 }
-
-// func (mg *MazeGenerator) countSpace(spaceType SpaceType) {
-// 	counter := 0
-// 	for i := range mg.maze {
-// 		for j := range mg.maze[i] {
-// 			if SpaceType(mg.maze[i][j]) == spaceType {
-// 				counter++
-// 			}
-// 		}
-// 	}
-// 	if spaceType == open {
-// 		mg.openSpace = counter
-// 	}
-// 	if spaceType == exitable {
-// 		mg.exitableSpace = counter
-// 	}
-// }
 
 func CreateMazeGenerator(M, N int, generator *rand.Rand) *MazeGenerator {
 	if M&N&1 == 0 {
@@ -130,13 +104,12 @@ func (mg *MazeGenerator) isOutOfBounds(i, j int) bool {
 }
 
 func (mg *MazeGenerator) genMaze(i, j int) bool {
-	if mg.maze[i][j] == 2 {
-		fmt.Println("please :(")
-		return true
+	state := mg.maze[i][j] == 2
+	if !state {
+		mg.maze[i][j] = 0
 	}
-	state := false
-	mg.maze[i][j] = 0
 	for _, d := range GetRandomTraversal(mg.generator) {
+		fmt.Println(d, i, j)
 		x1, y1 := i+d[0], j+d[1]
 		x2, y2 := x1+d[0], y1+d[1]
 		if mg.isOutOfBounds(x2, y2) || mg.maze[x2][y2] == 0 {
@@ -147,22 +120,6 @@ func (mg *MazeGenerator) genMaze(i, j int) bool {
 	}
 	return state
 }
-
-// func (mg *MazeGenerator) getNeighbours(i, j int) [][]int {
-// 	potentialNeighbours := [][]int{
-// 		{i + 1, j},
-// 		{i - 1, j},
-// 		{i, j - 1},
-// 		{i, j + 1}}
-// 	neighbours := make([][]int, 0)
-// 	for _, nei := range potentialNeighbours {
-// 		x, y := nei[0], nei[1]
-// 		if !mg.isOutOfBounds(x, y) && mg.maze[x][y] == 0 {
-// 			neighbours = append(neighbours, nei)
-// 		}
-// 	}
-// 	return neighbours
-// }
 
 func (mg *MazeGenerator) traverseMaze(i, j int, visited [][]bool) {
 	if mg.isOutOfBounds(i, j) || mg.maze[i][j] != 0 || visited[i][j] {
@@ -193,6 +150,5 @@ func (mg *MazeGenerator) mazeIsSolveable() bool {
 			mg.traverseMaze(i, j, visited)
 		}
 	}
-
 	return regions == 1
 }
