@@ -30,7 +30,7 @@ func (s *solver) search(startX, startY, goalX, goalY int) bool {
 	s.nodeList[startX][startY].UpdateNode(0, 0, 0, startX, startY)
 	heap.Push(&s.openList, s.nodeList[startX][startY])
 	for s.openList.Len() > 0 {
-		frontierNode := heap.Pop(&s.openList).(*priorityQueueNode).node
+		frontierNode := heap.Pop(&s.openList).(*node)
 		s.visited[frontierNode.X][frontierNode.Y] = true
 		neighbourList := s.generateNeighbours(frontierNode.X, frontierNode.Y)
 		for _, neighbourCoords := range neighbourList {
