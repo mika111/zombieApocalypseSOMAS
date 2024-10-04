@@ -1,21 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"time"
 	"zombieApocalypeSOMAS/apocalypseServer"
-	"zombieApocalypeSOMAS/physicsEngine"
+	pathfinding "zombieApocalypeSOMAS/pathFinding"
 )
 
 func main() {
 	serv := apocalypseServer.CreateApocalypseServer(1, 1, time.Millisecond, 100, 49, 49, 1257)
 	serv.GenerateMaze(0, 0, 18, 18)
-	serv.Maze.Print()
-	serv.InjectAgents(10, 10)
-
-	for i := 0; i < 5; i++ {
-		for _, ag := range serv.GetAgentMap() {
-			ag.UpdatePhysicalState(physicsEngine.Vector2D{X: 100, Y: 100})
-		}
+	//serv.Maze.Print()
+	//serv.InjectAgents(10, 10)
+	solnPath := pathfinding.FindPath(0, 0, 18, 18, serv.Maze)
+	fmt.Println(solnPath)
+	for _, coord := range solnPath {
+		serv.Maze[coord[0]][coord[1]] = 4
 	}
 
 	serv.ExportState("state.json")
