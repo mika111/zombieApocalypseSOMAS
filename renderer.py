@@ -41,10 +41,10 @@ def generateFrame(screen,jsonData):
             pygame.draw.rect(screen,color[jsonData['Maze'][x][y]],rect)
 
     for humanLocation in jsonData["HumanPositions"]:
-        location = (scaleX*humanLocation["X"] + borderSize,scaleY*humanLocation["Y"]+ borderSize)
+        location = (scaleX*humanLocation["X"] + 0.5*scaleX + borderSize,scaleY*humanLocation["Y"]+0.5*scaleY + borderSize)
         pygame.draw.circle(screen,humanColour,location,1)
     for zombieLocation in jsonData["ZombiePositions"]:
-        location = (scaleX*zombieLocation["X"]+borderSize,scaleY*zombieLocation["Y"]+borderSize)
+        location = (scaleX*zombieLocation["X"]+ 0.5*scaleX +borderSize,scaleY*zombieLocation["Y"]+ 0.5*scaleY +borderSize)
         pygame.draw.circle(screen,zombieColour,location,1)
     pygame.display.flip()
     

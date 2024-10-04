@@ -9,7 +9,6 @@ import (
 	"zombieApocalypeSOMAS/mazeGenerator"
 	"zombieApocalypeSOMAS/physicsEngine"
 
-	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/server"
 )
 
@@ -17,6 +16,7 @@ type IApocalypseServer interface {
 	server.IServer[extendedAgents.IApocalypseEntity]
 	GetNumZombies() int
 	GetNumHumans() int
+	MapSpawnableArea() int
 }
 
 type ApocalypseServer struct {
@@ -50,43 +50,9 @@ func CreateApocalypseServer(iterations, turns int, maxDuration time.Duration, ma
 	}
 }
 
-func (serv *ApocalypseServer) InjectAgents(numHumans, numZombies int) {
-	for i := 0; i < numZombies; i++ {
-		zombie := serv.SpawnNewZombie(10.0, serv.GenerateRandomPosition())
-		serv.AddAgent(zombie)
-	}
-	for i := 0; i < numHumans; i++ {
-		human := serv.SpawnNewHuman(10.0, serv.GenerateRandomPosition())
-		serv.AddAgent(human)
-	}
-}
-
 func (serv *ApocalypseServer) GenerateMaze(entrance_i, entrance_j, exit_i, exit_j int) {
 	mazeGen := mazeGenerator.CreateMazeGenerator(serv.MapSize.X, serv.MapSize.Y, serv.RandNumGenerator)
 	serv.Maze = mazeGen.CreateMaze(entrance_i, entrance_j, exit_i, exit_j)
-}
-
-func (serv *ApocalypseServer) SpawnNewHuman(mass int, initialPosition physicsEngine.Vector2D) *extendedAgents.Human {
-	entity := &extendedAgents.ApocalypseEntity{
-		BaseAgent:     agent.CreateBaseAgent(serv),
-		PhysicalState: physicsEngine.CreateInitialPhysicalState(&initialPosition, mass),
-	}
-	human := &extendedAgents.Human{ApocalypseEntity: entity}
-	return human
-}
-
-func (serv *ApocalypseServer) SpawnNewZombie(mass int, initialPosition physicsEngine.Vector2D) *extendedAgents.Zombie {
-	entity := &extendedAgents.ApocalypseEntity{
-		BaseAgent:     agent.CreateBaseAgent(serv),
-		PhysicalState: physicsEngine.CreateInitialPhysicalState(&initialPosition, mass),
-	}
-
-	zombie := &extendedAgents.Zombie{
-		ApocalypseEntity: entity,
-		Strength:         10,
-		RandNumGenerator: serv.RandNumGenerator,
-	}
-	return zombie
 }
 
 func (server *ApocalypseServer) GetNumEntity(entity extendedAgents.Species) int {
@@ -109,6 +75,16 @@ func (server *ApocalypseServer) GetEntityLocations(entity extendedAgents.Species
 	return entityLocations
 }
 
+func (server *ApocalypseServer) EntityLocationMap(entity extendedAgents.Species) map[physicsEngine.Vector2D]struct{} {
+	entityLocations := make(map[physicsEngine.Vector2D]struct{})
+	for _, ag := range server.GetAgentMap() {
+		if ag.GetSpecies() == entity {
+			entityLocations[*ag.GetPhysicalState().Position] = struct{}{}
+		}
+	}
+	return entityLocations
+}
+
 func (server *ApocalypseServer) ExportState(filePath string) {
 	state := gameState{
 		RoundNum:        2,
@@ -123,11 +99,4 @@ func (server *ApocalypseServer) ExportState(filePath string) {
 	file, _ := os.Create(filePath)
 	defer file.Close()
 	file.Write(gameStateJSON)
-}
-
-func (server *ApocalypseServer) GenerateRandomPosition() physicsEngine.Vector2D {
-	vec2 := physicsEngine.Vector2D{X: 0, Y: 0}
-	vec2.Y = rand.IntN(server.MapSize.Y)
-	vec2.X = rand.IntN(server.MapSize.X)
-	return vec2
 }
