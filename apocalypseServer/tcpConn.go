@@ -34,7 +34,6 @@ func (server *ApocalypseServer) ExportState() {
 	}
 
 	gameStateJSON, _ := json.Marshal(state)
-	fmt.Println("Sending json")
 	server.Connection.Write(gameStateJSON)
 }
 
@@ -44,6 +43,6 @@ func (server *ApocalypseServer) ExportInitialState() {
 		Maze: server.Maze,
 	}
 	gameStateJSON, _ := json.Marshal(state)
-	fmt.Println("Sending json")
+	//fmt.Println("Sending json")
 	server.Connection.Write(gameStateJSON)
 }
