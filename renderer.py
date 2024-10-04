@@ -1,7 +1,7 @@
 import json
 import pygame
-jsonFile = open("state.json","r")
-jsonData = json.load(jsonFile)
+import socket
+
 scaleX,scaleY = 10,10 #used to scale the display wrt to the size of the simulation map. 
 borderSize = 10 #thickness of border around map. 
 exitColour = (255,0,255) 
@@ -11,6 +11,7 @@ humanColour = (255,255,0)
 wallColour = (255,255,255)
 backgroundColour = (0,0,0)
 zombiePathColour = (255,0,0)
+jsonData = 0
 def initialiseDisplay(stateData):
      width = 2*borderSize+scaleX*stateData["MapSize"]["X"]
      height = 2*borderSize+scaleY*stateData["MapSize"]["Y"]
@@ -47,9 +48,35 @@ def generateFrame(screen,jsonData):
         location = (scaleX*zombieLocation["X"]+ 0.5*scaleX +borderSize,scaleY*zombieLocation["Y"]+ 0.5*scaleY +borderSize)
         pygame.draw.circle(screen,zombieColour,location,1)
     pygame.display.flip()
-    
+
+def connectToBackend(address):
+    print("waiting for connection")
+    client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    client.connect(("localhost",address))
+    print("connected succesfully")
+    return client
+
+def receiveData(socket):
+    try:
+        jsonData = connection.recv(22*1100).decode('utf8')
+        jsonData = json.loads(jsonData)
+        return jsonData
+    except ConnectionResetError:
+        print("connection reset error")
+        return False
+
+
+
+connection = connectToBackend(8080)
+newJsonData = receiveData(connection)
+if newJsonData != False:
+    jsonData = newJsonData
 screen,clock = initialiseDisplay(jsonData)
+generateFrame(screen,jsonData)
 while True:
+    newJsonData = receiveData(connection)
+    if newJsonData != False:
+        jsonData = newJsonData
     for event in pygame.event.get():
         if event.type == pygame.QUIT: #quit on clicking X
             pygame.quit()

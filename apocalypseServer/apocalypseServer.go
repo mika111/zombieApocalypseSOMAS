@@ -1,9 +1,8 @@
 package apocalypseServer
 
 import (
-	"encoding/json"
 	"math/rand/v2"
-	"os"
+	"net"
 	"time"
 	extendedAgents "zombieApocalypeSOMAS/agent"
 	"zombieApocalypeSOMAS/mazeGenerator"
@@ -24,15 +23,7 @@ type ApocalypseServer struct {
 	RandNumGenerator *rand.Rand
 	MapSize          physicsEngine.Vector2D
 	Maze             mazeGenerator.Maze
-}
-
-type gameState struct {
-	RoundNum        int
-	MapSize         physicsEngine.Vector2D
-	ZombiePositions []physicsEngine.Vector2D
-	HumanPositions  []physicsEngine.Vector2D
-	Maze            mazeGenerator.Maze
-	BorderSize      int
+	Connection       net.Conn
 }
 
 type ApocalypeSeed int
@@ -47,6 +38,7 @@ func CreateApocalypseServer(iterations, turns int, maxDuration time.Duration, ma
 		RandNumGenerator: rand.New(rand.NewPCG(mazeSeed, mazeSeed)),
 		MapSize:          physicsEngine.MakeVec2D(width, height),
 		Maze:             nil,
+		Connection:       nil,
 	}
 }
 
@@ -83,20 +75,4 @@ func (server *ApocalypseServer) EntityLocationMap(entity extendedAgents.Species)
 		}
 	}
 	return entityLocations
-}
-
-func (server *ApocalypseServer) ExportState(filePath string) {
-	state := gameState{
-		RoundNum:        2,
-		MapSize:         server.MapSize,
-		ZombiePositions: server.GetEntityLocations(extendedAgents.ZomboSapien),
-		HumanPositions:  server.GetEntityLocations(extendedAgents.HomoSapien),
-		Maze:            server.Maze,
-		BorderSize:      10,
-	}
-
-	gameStateJSON, _ := json.Marshal(state)
-	file, _ := os.Create(filePath)
-	defer file.Close()
-	file.Write(gameStateJSON)
 }
