@@ -10,10 +10,10 @@ def connectToBackend(address):
 
 def receiveData(socket):
     try:
-        jsonData = socket.recv(5*1024).decode('utf8')
+        jsonData = socket.recv(10*1024).decode('utf8')
         jsonData = json.loads(jsonData)
         return jsonData
     except ConnectionResetError:
-        print("failed to get data")
+        print("all data sent")
         return False
 

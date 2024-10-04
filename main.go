@@ -14,33 +14,23 @@ func main() {
 	serv.ConnectToFrontEnd("localhost:8080")
 	serv.GenerateMaze(0, 0, 48, 48)
 	serv.ExportInitialState()
-	zombie, human := spawnAgentsDemo(serv)
+	human := serv.SpawnNewHuman(10.0, physicsEngine.MakeVec2D(0, 0))
+	serv.AddAgent(human)
 	agentPos := human.PhysicalState.Position
-	zombiePos := zombie.PhysicalState.Position
-	fmt.Println(zombiePos, agentPos)
+	targetPos := physicsEngine.MakeVec2D(48, 48)
+	fmt.Println(targetPos, agentPos)
 findAgent:
 	for {
-		fmt.Println(zombiePos, agentPos)
-
-		if *zombiePos == *agentPos {
-			fmt.Println("breaking")
+		if targetPos == *agentPos {
 			break findAgent
 		}
-		solnPath := pathfinding.FindPath(zombiePos.X, zombiePos.Y, agentPos.X, agentPos.Y, serv.Maze)
-		// if len(solnPath) == 0 {
-		// 	fmt.Print("breaking")
-		// 	break findAgent
-		// }
+		solnPath := pathfinding.FindPath(agentPos.X, agentPos.Y, targetPos.X, targetPos.Y, serv.Maze)
 		vec2 := physicsEngine.MakeVec2D(solnPath[len(solnPath)-1][0], solnPath[len(solnPath)-1][1])
-		zombie.PhysicalState.Position = &vec2
-		zombiePos = zombie.PhysicalState.Position
+		human.PhysicalState.Position = &vec2
+		agentPos = human.PhysicalState.Position
 		serv.ExportState()
 		//time.Sleep(time.Millisecond)
 	}
-	// for i := 0; i < 100; i++ {
-
-	// 	serv.ExportState()
-	// }
 }
 
 func spawnAgentsDemo(serv *apocalypseServer.ApocalypseServer) (extendedAgents.Zombie, extendedAgents.Human) {

@@ -59,20 +59,26 @@ def getData(lock,socket,jsonBuffer):
         if jsonData == False:
             print("breaking json receiver loop")
             break
-        with lock:
-            jsonBuffer.appendleft(jsonData)
+        jsonBuffer.appendleft(jsonData)
 
 def run():
     lock = threading.Lock()
     jsonBuffer = deque()
     socket = processJSON.connectToBackend(8080)
-    jsonReceiver = threading.Thread(target=getData,args=(lock,socket,jsonBuffer))
-    jsonReceiver.start()
+    # jsonReceiver = threading.Thread(target=getData,args=(lock,socket,jsonBuffer))
+    # jsonReceiver.start()
+    getData(lock,socket,jsonBuffer)
+    print("got data")
     window = initWindow()
     renderer = sdl2.ext.Renderer(window)
     jsonData = jsonBuffer.pop()
     CreateMaze(renderer,jsonData)
     renderer.present()
+    waiting = True
+    while waiting:
+        for event in sdl2.ext.get_events():
+            if event.type == sdl2.SDL_MOUSEBUTTONDOWN:
+                waiting = False
     while jsonBuffer:
         jsonData = jsonBuffer.pop()
         addAgents(renderer,jsonData)
@@ -80,9 +86,8 @@ def run():
         eventsList = sdl2.ext.get_events()
         for event in eventsList:
             if event.type == sdl2.SDL_QUIT:
-                running = False
                 break
         #window.refresh()
         cleanupFrame(renderer,jsonData)
-        time.sleep(0.1)
+        time.sleep(0.03)
 run()
