@@ -2,7 +2,6 @@ package pathfinding
 
 import (
 	"container/heap"
-	"fmt"
 )
 
 func (s *solver) tracePath(startX, startY, endX, endY int) {
