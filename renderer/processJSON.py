@@ -1,5 +1,5 @@
-import socket 
 import json
+import socket
 
 def connectToBackend(address):
     print("waiting for connection")
@@ -17,12 +17,3 @@ def receiveData(socket):
         print("failed to get data")
         return False
 
-connection = connectToBackend(8080)
-i = 0
-while True:
-    jsonData = receiveData(connection)
-    if jsonData == False:
-        break
-    print(jsonData)
-    print(i)
-    i += 1

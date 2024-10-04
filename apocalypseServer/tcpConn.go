@@ -4,19 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"os"
 	extendedAgents "zombieApocalypeSOMAS/agent"
 	"zombieApocalypeSOMAS/mazeGenerator"
 	"zombieApocalypeSOMAS/physicsEngine"
 )
 
+type staticGameState struct {
+	//this is only sent once; it can never change
+	Maze       mazeGenerator.Maze
+}
+
 type gameState struct {
 	RoundNum        int
-	MapSize         physicsEngine.Vector2D
 	ZombiePositions []physicsEngine.Vector2D
 	HumanPositions  []physicsEngine.Vector2D
-	Maze            mazeGenerator.Maze
-	BorderSize      int
 }
 
 func (a *ApocalypseServer) ConnectToFrontEnd(addr string) {
@@ -25,20 +26,24 @@ func (a *ApocalypseServer) ConnectToFrontEnd(addr string) {
 	fmt.Println("connection accepted")
 }
 
-func (server *ApocalypseServer) ExportState(filePath string) {
+func (server *ApocalypseServer) ExportState() {
 	state := gameState{
 		RoundNum:        2,
-		MapSize:         server.MapSize,
 		ZombiePositions: server.GetEntityLocations(extendedAgents.ZomboSapien),
 		HumanPositions:  server.GetEntityLocations(extendedAgents.HomoSapien),
-		Maze:            server.Maze,
-		BorderSize:      10,
 	}
 
 	gameStateJSON, _ := json.Marshal(state)
-	file, _ := os.Create(filePath)
-	defer file.Close()
-	file.Write(gameStateJSON)
+	fmt.Println("Sending json")
+	server.Connection.Write(gameStateJSON)
+}
+
+func (server *ApocalypseServer) ExportInitialState() {
+	//export all the data for setting up the renderer
+	state := staticGameState{
+		Maze: server.Maze,
+	}
+	gameStateJSON, _ := json.Marshal(state)
 	fmt.Println("Sending json")
 	server.Connection.Write(gameStateJSON)
 }
